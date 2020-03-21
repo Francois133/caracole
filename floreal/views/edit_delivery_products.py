@@ -30,7 +30,15 @@ def edit_delivery_products(request, delivery):
     if request.method == 'POST':  # Handle submitted data
         _parse_form(request)
         JournalEntry.log(request.user, "Edited products for delivery %s/%s", delivery.network.name, delivery.name)
-        return redirect('edit_delivery', delivery.id)
+        d=request.POST
+        if 'SauvRet' in d:
+            return redirect('edit_delivery', delivery.id)
+        else:
+            vars = {'QUOTAS_ENABLED': False,
+                'user': request.user,
+                'delivery': delivery}
+            vars.update(csrf(request))
+            return render_to_response('edit_delivery_products.html', vars)
 
     else:  # Create and populate forms to render
         vars = {'QUOTAS_ENABLED': False,
@@ -84,7 +92,7 @@ def _pd_update(pd, fields):
 def _parse_form(request):
     """Parse a delivery edition form and update DB accordingly."""
     d = request.POST
-    print(d)
+    #print(d)
     dv = Delivery.objects.get(pk=int(d['dv-id']))
 
     # Edit delivery name and state
