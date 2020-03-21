@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.http import HttpResponseForbidden
 from django.core.mail import send_mail
 
@@ -33,7 +33,7 @@ def candidacy(request):
             item['can_be_candidate_to'] = item['can_be_candidate_to'].exclude(id=item['candidate_to'].user.id)
         networks.append(item)
     print(networks)
-    return render_to_response('candidacy.html', {'user': user, 'networks': networks})
+    return render(request,'candidacy.html', {'user': user, 'networks': networks})
 
 
 @login_required()

@@ -5,7 +5,7 @@
 past products, parse POSTed forms to update a delivery's products list."""
 
 import django
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render, redirect
 if django.VERSION < (1, 8):
     from django.core.context_processors import csrf
 else:
@@ -37,7 +37,7 @@ def edit_delivery_products(request, delivery):
                 'user': request.user,
                 'delivery': delivery}
         vars.update(csrf(request))
-        return render_to_response('edit_delivery_products.html', vars)
+        return render(request,'edit_delivery_products.html', vars)
 
 
 def _get_pd_fields(d, r_prefix):

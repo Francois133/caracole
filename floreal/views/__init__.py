@@ -4,7 +4,7 @@
 from datetime import datetime
 import os
 
-from django.shortcuts import render_to_response, redirect, reverse
+from django.shortcuts import render, redirect, reverse
 from django.http import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse
 from django.contrib.auth.decorators import login_required
 
@@ -23,7 +23,6 @@ from .edit_user_memberships import edit_user_memberships, json_memberships
 from .regulation import adjust_subgroup
 from .view_purchases import \
     view_purchases_html, view_purchases_latex, view_purchases_xlsx, view_cards_latex, get_archive, non_html_response
-from .password_reset import password_reset
 from .candidacies import candidacy, cancel_candidacy, validate_candidacy, leave_network, create_candidacy
 
 from floreal.views import require_phone_number as phone
@@ -53,7 +52,7 @@ def index(request):
                        for sg in subgroup_admin]
     subgroup_admin = [sg_dv_cd for sg_dv_cd in subgroup_admin if sg_dv_cd['dv'].exists() or sg_dv_cd['cd'].exists()]
     vars['subgroup_admin'] = subgroup_admin
-    return render_to_response('index.html', vars)
+    return render(request,'index.html', vars)
 
 
 
@@ -65,7 +64,7 @@ def network_admin(request, network):
             'deliveries': m.Delivery.objects.filter(network=nw).exclude(state=m.Delivery.TERMINATED),
             'candidacies': m.Candidacy.objects.filter(subgroup__network=nw),
             'Delivery': m.Delivery}
-    return render_to_response('network_admin.html', vars)
+    return render(request,'network_admin.html', vars)
 
 
 def _dv_has_no_purchase(dv):
@@ -81,7 +80,7 @@ def archived_deliveries(request, network):
     vars = {'user': user, 'nw': nw}
     vars['deliveries'] = m.Delivery.objects.filter(network=nw, state=m.Delivery.TERMINATED)
     vars['empty_deliveries'] = [dv for dv in vars['deliveries'] if _dv_has_no_purchase(dv)]
-    return render_to_response('archived_deliveries.html', vars)
+    return render(request,'archived_deliveries.html', vars)
 
 
 @nw_admin_required()
@@ -158,7 +157,7 @@ def edit_delivery(request, delivery):
         'CAN_EDIT_PRODUCTS': dv.state != m.Delivery.TERMINATED,
         'multi_sg': dv.network.subgroup_set.count() > 1
     }
-    return render_to_response('edit_delivery.html', vars)
+    return render(request,'edit_delivery.html', vars)
 
 
 def list_delivery_models(request, network):
@@ -169,7 +168,7 @@ def list_delivery_models(request, network):
         'nw': nw,
         'deliveries': m.Delivery.objects.filter(network=nw).order_by("-id")
     }
-    return render_to_response('list_delivery_models.html', vars)
+    return render(request,'list_delivery_models.html', vars)
 
 
 @nw_admin_required()
@@ -281,7 +280,7 @@ def view_emails(request, network=None, subgroup=None):
         vars['subgroups'] = m.Subgroup.objects.filter(network_id=network)
     else:
         return HttpResponseForbidden("Préciser un réseau ou un sous-groupe")
-    return render_to_response('emails.html', vars)
+    return render(request,'emails.html', vars)
 
 
 @login_required()
@@ -311,7 +310,7 @@ def view_phones(request, network=None, subgroup=None):
         rec['sg_user'] = sg.users.exclude(id__in=sg_staff_id).exclude(id=sg.extra_user.id).order_by('last_name', 'first_name')
         vars['subgroups'].append(rec)
     vars['subgroups'].sort(key=lambda rec: rec['sg'].name)
-    return render_to_response('phones.html', vars)
+    return render(request,'phones.html', vars)
 
 
 @login_required()
@@ -321,7 +320,7 @@ def view_history(request):
               for dv in nw.delivery_set.all()]
     orders = [(nw, od) for (nw, od) in orders if od.price > 0]  # Filter out empty orders
     vars = {'user': request.user, 'orders': orders}
-    return render_to_response("view_history.html", vars)
+    return render(request,"view_history.html", vars)
 
 
 @nw_admin_required()
@@ -336,7 +335,7 @@ def journal(request):
             days.append(current_day)
         else:
             current_day['entries'].append(record)
-    return render_to_response("journal.html", {'user': request.user, 'days': days})
+    return render(request,"journal.html", {'user': request.user, 'days': days})
 
 
 @nw_admin_required()
@@ -358,7 +357,7 @@ def all_deliveries(request, network, states):
 
 def all_deliveries_html(request, network, states):
     ctx = all_deliveries(request, network, states)
-    return render_to_response("all_deliveries.html", ctx)
+    return render(request,"all_deliveries.html", ctx)
 
 
 def all_deliveries_latex(request, network, states):

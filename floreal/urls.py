@@ -4,6 +4,7 @@
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic import TemplateView
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView
 
 #from django_markdown import urls as django_markdown_urls
 
@@ -73,10 +74,10 @@ urlpatterns = [
 
     url(r'^accounts/register$', views.user_register, name="user_register"),
     url(r'^accounts/registration_post.html$', views.user_register_post, name="registration_post"),
-    url(r'^accounts/password/reset/?$', views.password_reset, name="password_reset"),
+    url(r'^accounts/password/reset/?$', PasswordResetView.as_view(), name="password_reset"),
+    url(r'accounts/password/reset_done/?$', PasswordResetDoneView.as_view(), name="password_reset_done"),
     url(r'^accounts/', include('registration.backends.simple.urls')),
 
-    url(r'^add-phone-number/(?P<phone>[^./]+)$', views.phone.add_phone_number, name="add_phone_number"),
+    url(r'^add-phone-number/(?P<phone>[^./]+)$', views.phone.add_phone_number, name="add_phone_number")
 
-    url('^markdown/', include("django_markdown.urls")),
 ]

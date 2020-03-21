@@ -8,7 +8,7 @@ if django.VERSION < (1, 8):
     from django.core.context_processors import csrf
 else:
     from django.template.context_processors import csrf
-from django.shortcuts import redirect, render_to_response
+from django.shortcuts import redirect, render
 
 from .. import models as m
 from ..penury import set_limit
@@ -37,7 +37,7 @@ def adjust_subgroup(request, delivery, subgroup=None):
             'ordered_price': dd['table'][0]['price']
         }
         vars.update(csrf(request), user=request.user)
-        return render_to_response('regulation.html', vars)
+        return render(request,'regulation.html', vars)
 
 
 def _parse_form(request):

@@ -4,7 +4,7 @@
 import os
 
 from django.http import HttpResponse, HttpResponseForbidden
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
 from caracole import settings
@@ -43,7 +43,7 @@ def view_purchases_html(request, delivery, subgroup=None):
         if request.user not in dv.network.staff.all():
             return HttpResponseForbidden("Réservé aux admins")
         subgroups = dv.network.subgroup_set.all()
-    return render_to_response('view_purchases.html', delivery_description(dv, subgroups))
+    return render(request,'view_purchases.html', delivery_description(dv, subgroups))
 
 
 @login_required()
