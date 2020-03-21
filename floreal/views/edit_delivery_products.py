@@ -61,12 +61,16 @@ def _get_pd_fields(d, r_prefix):
     quota = raw['quantity_limit']
     quantum = raw['quantum']
     weight = raw['unit_weight']
+    try :
+        price = float(raw['price'])
+    except ValueError : #price string empty, shall message the user, temp solution 
+        return {'id': id, 'deleted': True}
     if not weight:  # 0 or None
         weight = 1 if raw['unit'] == 'kg' else 0
     return {'id': id,
             'name': raw['name'],
             'place': int(raw['place']),
-            'price': float(raw['price']),
+            'price': price,
             'quantity_per_package': int(qpp) if qpp else None,
             'unit': raw['unit'] or u'pièce',
             'quantity_limit': int(quota) if quota else None,
