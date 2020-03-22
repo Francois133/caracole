@@ -51,7 +51,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'registration',  # WARNING that's django-registration-redux, not django-registration!
     'django_extensions',
-    'django_markdown' # WARNING that's django-markdown-app, not django-markdown !
+     #'django_markdown', # WARNING that's django-markdown-app, not django-markdown !
+     #'tinymce'
 )
 
 

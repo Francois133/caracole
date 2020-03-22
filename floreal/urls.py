@@ -80,5 +80,4 @@ urlpatterns = [
 
     url(r'^add-phone-number/(?P<phone>[^./]+)$', views.phone.add_phone_number, name="add_phone_number"),
 
-    url('^markdown/', include("django_markdown.urls")),
 ]
