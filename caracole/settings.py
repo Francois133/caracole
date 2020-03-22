@@ -51,8 +51,10 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'registration',  # WARNING that's django-registration-redux, not django-registration!
     'django_extensions',
-    'django_markdown'
+    'django_markdown' # WARNING that's django-markdown-app, not django-markdown !
 )
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -98,7 +100,7 @@ WSGI_APPLICATION = 'caracole.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/home/fabien/src/caracole/database.sqlite3'
+        'NAME': '/home/master/caracole/database.sqlite3'
     }
 }
 
