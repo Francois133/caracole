@@ -101,6 +101,25 @@ class Candidacy(models.Model):
     subgroup = models.ForeignKey(Subgroup, on_delete=models.CASCADE)
     message = models.TextField(null=True, blank=True)  # Currently unused, might be used to communicate with admins
 
+#TO DO implement roles for consumer/producer/referent
+class Consumer(models.Model):
+    """Peut adherer à un sous-groupe d'un réseau, commander des produits d'une livraison"""
+    consumer = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class Producer(models.Model):
+    """Peut proposer des livraisons sur un réseau"""
+    producer = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.TextField(null=True, blank=True, default=None)
+
+class Referent(models.Model):
+    """
+    is_producer pointe vers lui-même en tant que producteur
+    Un référent peut administrer un sous_groupe
+    """
+    referent = models.ForeignKey(Consumer, on_delete=models.CASCADE)
+    is_referent_for = models.ManyToManyField(Producer, related_name='is_refered_by')
+    is_producer = models.ForeignKey(Producer, on_delete=models.SET_NULL,null=True)
+
 
 class Delivery(models.Model):
     """A command of products, for a given network. It's referenced by product
@@ -127,6 +146,7 @@ class Delivery(models.Model):
     network = models.ForeignKey(Network, on_delete=models.CASCADE)
     state = models.CharField(max_length=1, choices=STATE_CHOICES.items(), default=PREPARATION)
     description = models.TextField(null=True, blank=True, default=None)
+    datedelivery = models.DateField(default=None, null=True)
 
     def get_stateForSubgroup(self, sg):
         try:
@@ -160,6 +180,11 @@ class Delivery(models.Model):
         unique_together = (('network', 'name'),)
         ordering = ('-id',)
 
+class ProposeDelivery(models.Model):
+    delivery = models.ForeignKey(Delivery, on_delete=models.CASCADE)
+    producer = models.ForeignKey(Producer, on_delete=models.CASCADE)
+    datelimitorder = models.DateField()
+
 class SubgroupStateForDelivery(models.Model):
     INITIAL              = 'X'
     READY_FOR_DELIVERY   = 'Y'
@@ -192,7 +217,7 @@ class Product(models.Model):
     place = models.PositiveSmallIntegerField(null=True, blank=True, default=True)
 
     class Meta:
-        unique_together = (('delivery', 'name'),)
+        unique_together = (('delivery', 'name','price'),) #pourquoi delivery dans la clé primaire ?
         ordering = ('place', '-quantity_per_package', 'name',)
 
     def __str__(self):
