@@ -15,6 +15,7 @@ from django.http import HttpResponseForbidden
 from .getters import get_delivery
 from .decorators import nw_admin_required
 from ..models import Product, Delivery, JournalEntry
+from ..forms import DeliveryForm, ProductFormSet, ProductsSet, ProductForm
 from ..penury import set_limit
 
 
@@ -33,9 +34,22 @@ def edit_delivery_products(request, delivery):
         return redirect('edit_delivery', delivery.id)
 
     else:  # Create and populate forms to render
+        deliv = DeliveryForm(instance=delivery,prefix = 'dv') # auto_id = 'dv-%s" ne marche que pour le champ id
+        products = ProductsSet(Product) #là, il faut faire l'inital
+        formset= [] # une liste de formulaire
+        for product in delivery.product_set.all() : # order place
+            my_product_form = ProductForm(instance = product, prefix='r'+str(product.place), auto_id=False) 
+            # auto_id à False pour l'id des inputs et des textareas ?
+# y a de l'idée   
+# TO DO works because we order by place, this shall be the product id to save it, but the logics of the template
+# would have to also change, in auto_id '%s-' would mean id will be prefixed by r1-, prefix is for the names of the fields                
+            formset.append(my_product_form)
         vars = {'QUOTAS_ENABLED': False,
                 'user': request.user,
-                'delivery': delivery}
+                'delivery': delivery,
+                'deliv_form' : deliv,
+                'prodformset': formset,
+                }
         vars.update(csrf(request))
         return render(request,'edit_delivery_products.html', vars)
 
@@ -130,6 +144,7 @@ def _parse_form(request):
                                         quantity_limit=fields['quantity_limit'],
                                         unit=fields['unit'],
                                         unit_weight=fields['unit_weight'],
+                                        place = fields['place'],
                                         delivery=dv)
             pd.save()
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from django.conf.urls import include, url
+from django.urls import path, include
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic import TemplateView
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView
@@ -9,6 +11,7 @@ from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView
 #from django_markdown import urls as django_markdown_urls
 
 from . import views
+from caracole import settings
 
 urlpatterns = [
     url(r'^$', views.index, name='index'),
@@ -79,5 +82,9 @@ urlpatterns = [
     url(r'^accounts/', include('registration.backends.simple.urls')),
 
     url(r'^add-phone-number/(?P<phone>[^./]+)$', views.phone.add_phone_number, name="add_phone_number"),
+    path('summernote/', include('django_summernote.urls'))
 
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

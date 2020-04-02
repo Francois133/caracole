@@ -22,7 +22,8 @@
         'description': "{{pd.description|escapejs}}",{%else%}'described': false,{%endif%}
         'delivery': {{pd.delivery.id}} },
     {% endfor %}];
-
+    
+    var NB_PRODUCTS = PRODUCTS.length;
     /* If the "deleted" checkbox is checked, strike theline and disable product edition. */
     function reflect_deletion(r_prefix) {
       /* TODO: also reflect place renumbering. */
@@ -192,12 +193,14 @@
 
     $(document).ready(function() {
       /* Generate and fill product rows */
+       /*
       for(var i=0; i<PRODUCTS.length; i++) {
         var record = PRODUCTS[i];
         var r_prefix = add_row();
-        fill_row(r_prefix, record);
+        fill_row(r_prefix, record); 
       }
-
+        */
+        N_ROWS=NB_PRODUCTS+1;
       /* Add a couple of empty rows. */
       add_blank_products();
 
@@ -230,6 +233,8 @@
       tr.deleted textarea { text-decoration: line-through; }
       #products-table th.non-rotate { vertical-align: bottom; }
       #products-table textarea { width: 100%; }
+      #products-table2 th.non-rotate { vertical-align: bottom; }
+      #products-table2 textarea { width: 100%; }
       table .hidden { display: none; }
       td.place button { padding: 1px; }
       #dv-table th {text-align: right; }
@@ -241,6 +246,7 @@
 
 {% block content %}
 <form method="post" action="" id="form">
+<!--
     <table id="dv-table">
         <tr>
           <th><label for="dv-name">Nom de la livraison :</label></th>
@@ -267,7 +273,47 @@
         // $("#dv-description").markItUp(mySettings, {"previewParserPath": "/markdown/preview/"});
     </script>
     </p>
-
+-->
+    <table >
+    <tr>
+          <th> {{deliv_form.name.label}} : </th>
+          <td> {{deliv_form.name}}  </td>
+    </tr>
+     <tr>
+        <th> {{deliv_form.state.label}} : </th>
+        <td> {{deliv_form.state}} </td>
+    </table> 
+     
+    <div style="height: 50px;"></div>
+   
+    <h3>Description de la commande</h3>  
+    {{deliv_form.description}} <!-- C'est un iframe ici -->
+    
+    <table id="products-table">
+        <thead>
+            <tr>
+               <th class="hidden non-rotate"></th>
+                <th class="non-rotate">#</th>
+                <th class="non-rotate">Produit</th>
+                <th class="non-rotate">Prix</th>
+                <th class="non-rotate"></th>
+                <th class="non-rotate">Unité</th>
+                <th colspan="2" class="qpp non-rotate">Par carton</th>
+                {% if QUOTAS_ENABLED %}<th colspan="2" class="quota">Quota</th>{% endif %}
+                <th colspan="2" class="non-rotate">Quantum</th>
+                <th colspan="2" class="non-rotate">Poids</th>
+                <th class="rotate"><div><div>Effacer ?</div></div></th>
+                <th class="rotate"><div><div>Description ?</div></div></th>
+            </tr>
+        </thead>
+        <tbody>
+    {% for prodform in prodformset %}
+        {% include "product.html" with product=prodform prefix=prodform.prefix %}
+        <!-- {{prodform.media}} -->
+    {% endfor %}
+        </tbody>
+    </table>
+    <!--
     <table id="products-table">
         <thead>
             <tr>
@@ -288,12 +334,14 @@
         </thead>
         <tbody></tbody>
     </table>
+    -->
     <p>
         <button type='button' onclick="add_blank_products();">Ajouter des produits</button>
-        <button type='button' class='submit' onclick="submit_if_valid();">Sauvegarder</button>
+        <button type='submit' class='submit' onclick="submit_if_valid();">Sauvegarder</button>
         <input type='hidden' name='dv-id' value='{{delivery.id}}' />
         <input type='hidden' name='n_rows' id="n_rows" value='0' />
         {% csrf_token %}
 	</p>
+
 </form>
 {% endblock %}

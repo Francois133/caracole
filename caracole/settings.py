@@ -53,9 +53,16 @@ INSTALLED_APPS = (
     'django_extensions',
      #'django_markdown', # WARNING that's django-markdown-app, not django-markdown !
      #'tinymce'
+    'django_summernote',
 )
 
+X_FRAME_OPTIONS = 'SAMEORIGIN' #added with summernote for clickjacking protection
+SUMMERNOTE_THEME = 'bs3' # can be bs4 or lite
 
+SUMMERNOTE_CONFIG = {
+    'width' : '100%',
+    'lang': 'fr-FR',
+    }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -120,10 +127,17 @@ LOGIN_REDIRECT_URL = "/"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
 
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
 STATIC_URL = '/caracole/static/'
 
-STATICFILES_DIRS = (
+STATICFILES_DIRS = ( # used by load static in templates
     os.path.join(BASE_DIR, "floreal", "static"),
 )
 
+STATIC_ROOT = os.path.join(BASE_DIR,"static") #used by collect static
+
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
+

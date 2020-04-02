@@ -3,7 +3,9 @@
 
 from django import forms
 from .models import Delivery, Product
-from django.forms import formset_factory
+from django_summernote.widgets import SummernoteWidget, SummernoteInplaceWidget
+from django.forms.widgets import Textarea
+from django.forms import modelformset_factory, formset_factory
 
 class ProductForm(forms.ModelForm):
     """Sous forme d'une table, on a besoin d'initier les donnees, il faut recuperer l'id
@@ -16,27 +18,25 @@ class ProductForm(forms.ModelForm):
     #    super().__init__(self,*args,**kwargs) 
     #    self.auto_id=False
         
-    ajoute_desc = forms.BooleanField() # Faut-il rajouter une description au produit ou effacer le champ description
-    effacer = forms.BooleanField() # Faut-il effacer le produit après la requête   
-    def __str__(self):
-        return self.as_div_in_td
+    described = forms.BooleanField(required=False) # Faut-il rajouter une description au produit ou effacer le champ description
+    deleted = forms.BooleanField(required=False) # Faut-il effacer le produit après la requête, plutôt utiliser can_delete de django   
 
-    def as_div_in_td(self):
-    # pour être appelé dans le formulaire 
-        return self._html_output(
-            normal_row='<td%(html_class_attr)s><div>%(errors)s%(field)s%(help_text)s</div></td>',
-            error_row='', # pas d'error pour un élément du tableau
-            row_ender='</div></td>',
-            help_text_html='<br><span class="helptext">%s</span>',
-            errors_on_separate_row=False,
-        )  
+
     class Meta:
         model = Product # recupère tous les champs
-        exclude = ('delivery',)
+        exclude = ('delivery',) #par défaut un choix de delivery
+        widgets = { 'description' : Textarea(attrs={'rows':'5'}),
+                }
+#       widgets = {
+#               'description' : SummernoteWidget(attrs={'summernote' : {'width':'98%', 'height':'130px', 'airMode':False, 'iframe':False ,
+#'toolbar' : ['bold','italic', ['fontname', ['fontname']],['fontsize', ['fontsize']],['color', ['color']],'picture','codeview'],
+#       }}),
+#       }
+    # we can do airMode on the edit_product because we have already the js from the delivery description ?
 
-ProductFormset = formset_factory(ProductForm, extra =1) 
+ProductFormSet= modelformset_factory(Product,exclude=('delivery',),extra=2) 
 
-
+ProductsSet = formset_factory(ProductForm, extra=3) # On peut faire un set mais pas de modèle, on n'a pas de save
 
 class DeliveryForm(forms.ModelForm):
     """Le formulaire pour editer une livraison, template edit_delivery_products
@@ -44,12 +44,20 @@ class DeliveryForm(forms.ModelForm):
     C'est l'ensembe deux formulaires : un de Delivery et un ensemble de ProductForm
     On intialise un objet de type Form avec request.POST et on passe comme argument
     au template 'form' : form avec form de type Form 
-   """
-      
+    Idéalement il faut afficher <tr> <div> ...tous les fields sauf descriptions </div> </tr>
+    puis <tr> la textarea si description est non nulle </tr>
+   """ 
+    #auto_id='dv-%s' #ne marche pas en attribut de classe, ne marche qu'à la construction de l'objet ?
 
     class Meta:
         model = Delivery
         exclude = ('datedelivery','network')
+        widgets = { 
+            'description' : SummernoteWidget(attrs={
+                   #'id' : 'dv-description',    
+                   'summernote' : {'width':'100%', 'height':'300px', 'airMode':False, 'theme': 'light', 'iframe':False },
+                    }),
+        }
         # l'autre syntaxe est fields pour spécifier les fields
 
 

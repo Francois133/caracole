@@ -5,7 +5,6 @@ from datetime import datetime
 
 from django.db import models
 from django.contrib.auth.models import User
-
 from floreal.francais import articulate, plural, Plural
 from caracole import settings
 
@@ -142,10 +141,10 @@ class Delivery(models.Model):
         FROZEN:         "Gelée",
         REGULATING:     "Régularisation",
         TERMINATED:     "Terminée" }
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=64, verbose_name='Nom de la livraison')
     network = models.ForeignKey(Network, on_delete=models.CASCADE)
-    state = models.CharField(max_length=1, choices=STATE_CHOICES.items(), default=PREPARATION)
-    description = models.TextField(null=True, blank=True, default=None)
+    state = models.CharField(max_length=1, choices=STATE_CHOICES.items(), default=PREPARATION, verbose_name='État de la livraison')
+    description = models.TextField(null=True, blank=True, default=None, verbose_name='Description de la commande')
     datedelivery = models.DateField(default=None, null=True)
 
     def get_stateForSubgroup(self, sg):
@@ -204,7 +203,6 @@ class Product(models.Model):
     several deliveries, there are several homonym products in DB, one per delivery,
     so that changes in properties (prices, quotas etc.) don't affect other deliveries.
     """
-
     name = models.CharField(max_length=64)
     delivery = models.ForeignKey(Delivery, on_delete=models.CASCADE)
     price = models.DecimalField(decimal_places=2, max_digits=6)

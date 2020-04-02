@@ -120,7 +120,7 @@
     </table>
     {% if delivery.description %}
     <div style="height: 20px;"></div>
-    <p id="dv-description">{{delivery.description}}</p>
+    <p id="dv-description">{{delivery.description|safe}}</p> <!-- safe interprets the string as HTML -->
     <div style="height: 20px;"></div>
     {% else %}
     <div style="height: 20px;"></div>
