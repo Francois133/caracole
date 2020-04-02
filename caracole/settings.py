@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """
@@ -51,42 +51,55 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'registration',  # WARNING that's django-registration-redux, not django-registration!
     'django_extensions',
-    'django_markdown'
+     #'django_markdown', # WARNING that's django-markdown-app, not django-markdown !
+     #'tinymce'
+    'django_summernote',
 )
 
-if django.VERSION < (1, 8):
-    INSTALLED_APPS += ('longerusernameandemail',)
+X_FRAME_OPTIONS = 'SAMEORIGIN' #added with summernote for clickjacking protection
+SUMMERNOTE_THEME = 'bs3' # can be bs4 or lite
 
-MIDDLEWARE_CLASSES = (
+SUMMERNOTE_CONFIG = {
+    'width' : '100%',
+    'lang': 'fr-FR',
+    }
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-)
+]
 
-if django.VERSION < (1, 8):
-    TEMPLATE_DEBUG = True
-    TEMPLATE_STRING_IF_INVALID = "[[[Invalid template variable %s]]]"
-else:
-    TEMPLATES = [
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [os.path.join(BASE_DIR, 'templates')],
-            'APP_DIRS': True,
-            'OPTIONS': {
-                'context_processors': [
-                    'django.template.context_processors.request',
-                    'django.contrib.auth.context_processors.auth',
-                    'django.contrib.messages.context_processors.messages'
-                ],
-                'debug': True,
-                'string_if_invalid': "[[[Invalid template variable %s]]]"
-            }
+#MIDDLEWARE = (
+#    'django.contrib.sessions.middleware.SessionMiddleware',
+#    'django.middleware.common.CommonMiddleware',
+#    'django.middleware.csrf.CsrfViewMiddleware',
+#    'django.contrib.auth.middleware.AuthenticationMiddleware',
+#    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+#    'django.contrib.messages.middleware.MessageMiddleware',
+#    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+#)
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages'
+            ],
+            'debug': True,
+            'string_if_invalid': "[[[Invalid template variable %s]]]"
         }
-    ]
+    }
+]
 
 ROOT_URLCONF = 'floreal.urls'
 
@@ -95,7 +108,7 @@ WSGI_APPLICATION = 'caracole.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '/home/fabien/src/caracole/database.sqlite3'
+        'NAME': '/home/master/caracole/database.sqlite3'
     }
 }
 
@@ -114,10 +127,17 @@ LOGIN_REDIRECT_URL = "/"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
 
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
 STATIC_URL = '/caracole/static/'
 
-STATICFILES_DIRS = (
+STATICFILES_DIRS = ( # used by load static in templates
     os.path.join(BASE_DIR, "floreal", "static"),
 )
 
+STATIC_ROOT = os.path.join(BASE_DIR,"static") #used by collect static
+
 AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
+

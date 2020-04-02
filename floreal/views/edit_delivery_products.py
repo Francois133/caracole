@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf8 -*-
 
 """Helpers to edit products list: generate suggestions based on current and
 past products, parse POSTed forms to update a delivery's products list."""
 
 import django
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render, redirect
 if django.VERSION < (1, 8):
     from django.core.context_processors import csrf
 else:
@@ -15,6 +15,7 @@ from django.http import HttpResponseForbidden
 from .getters import get_delivery
 from .decorators import nw_admin_required
 from ..models import Product, Delivery, JournalEntry
+from ..forms import DeliveryForm, ProductFormSet, ProductsSet, ProductForm
 from ..penury import set_limit
 
 
@@ -41,11 +42,24 @@ def edit_delivery_products(request, delivery):
             return render_to_response('edit_delivery_products.html', vars)
 
     else:  # Create and populate forms to render
+        deliv = DeliveryForm(instance=delivery,prefix = 'dv') # auto_id = 'dv-%s" ne marche que pour le champ id
+        products = ProductsSet(Product) #là, il faut faire l'inital
+        formset= [] # une liste de formulaire
+        for product in delivery.product_set.all() : # order place
+            my_product_form = ProductForm(instance = product, prefix='r'+str(product.place), auto_id=False) 
+            # auto_id à False pour l'id des inputs et des textareas ?
+# y a de l'idée   
+# TO DO works because we order by place, this shall be the product id to save it, but the logics of the template
+# would have to also change, in auto_id '%s-' would mean id will be prefixed by r1-, prefix is for the names of the fields                
+            formset.append(my_product_form)
         vars = {'QUOTAS_ENABLED': False,
                 'user': request.user,
-                'delivery': delivery}
+                'delivery': delivery,
+                'deliv_form' : deliv,
+                'prodformset': formset,
+                }
         vars.update(csrf(request))
-        return render_to_response('edit_delivery_products.html', vars)
+        return render(request,'edit_delivery_products.html', vars)
 
 
 def _get_pd_fields(d, r_prefix):
@@ -72,7 +86,7 @@ def _get_pd_fields(d, r_prefix):
             'place': int(raw['place']),
             'price': price,
             'quantity_per_package': int(qpp) if qpp else None,
-            'unit': raw['unit'] or u'pièce',
+            'unit': raw['unit'] or 'pièce',
             'quantity_limit': int(quota) if quota else None,
             'quantum': float(quantum) if quantum else None,
             'unit_weight': float(weight) if weight is not None else None,
@@ -112,30 +126,30 @@ def _parse_form(request):
             pd = Product.objects.get(pk=fields['id'])
             if pd.delivery == dv:
                 if fields['deleted']:  # Delete previously existing product
-                    print "Deleting product",  pd
+                    print("Deleting product",  pd)
                     pd.delete()
                     # Since purchases have foreign keys to purchased products,
                     # they will be automatically deleted.
                     # No need to update penury management either, as there's
                     # no purchase of this product left to adjust.
                 else:  # Update product
-                    print "Updating product", pd
+                    print("Updating product", pd)
                     _pd_update(pd, fields)
                     pd.save(force_update=True)
             else:  # From another delivery
                 if fields['deleted']:  # Don't import product
-                    print "Ignoring past product", pd
+                    print("Ignoring past product", pd)
                     pass
                 else:  # Import product copy from other delivery
-                    print "Importing past product",  pd
+                    print("Importing past product",  pd)
                     _pd_update(pd, fields)
                     pd.delivery = dv
                     pd.id = None
                     pd.save(force_insert=True)
         elif fields['deleted']:
-                print "New product in r%d deleted/empty: ignoring" % r
+                print("New product in r%d deleted/empty: ignoring" % r)
         else:  # Parse products created from blank lines
-            print "Adding new product from line #%d" % r
+            print("Adding new product from line #%d" % r)
             pd = Product.objects.create(name=fields['name'],
                                         price=fields['price'],
                                         quantity_per_package=fields['quantity_per_package'],
