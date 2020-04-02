@@ -55,7 +55,7 @@ class DeliveryForm(forms.ModelForm):
         widgets = { 
             'description' : SummernoteWidget(attrs={
                    #'id' : 'dv-description',    
-                   'summernote' : {'width':'100%', 'height':'300px', 'airMode':False, 'theme': 'light', 'iframe':False },
+                   'summernote' : {'width':'100%', 'height':'300px', 'airMode':False, 'iframe':True },
                     }),
         }
         # l'autre syntaxe est fields pour spécifier les fields

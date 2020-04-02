@@ -34,8 +34,9 @@ def edit_delivery_products(request, delivery):
         d=request.POST
         if 'SauvRet' in d:
             return redirect('edit_delivery', delivery.id)
-        else:
-            return prepare_and_render(request,delivery)
+        else: # Only save
+            #delivery = get_delivery(delivery)
+            return redirect('edit_delivery_products', delivery.id)
     else:  # Create and populate forms to render
         return prepare_and_render(request,delivery)
 
