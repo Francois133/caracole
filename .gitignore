@@ -6,4 +6,4 @@ database.sqlite3
 *.bak
 *~
 floreal/migrations/*
-floreal/static/*
+static/*
