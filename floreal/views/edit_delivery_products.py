@@ -40,7 +40,9 @@ def edit_delivery_products(request, delivery):
         return prepare_and_render(request,delivery)
 
 def prepare_and_render(request,delivery):
-    deliv = DeliveryForm(instance=delivery,prefix = 'dv') # auto_id = 'dv-%s" ne marche que pour le champ id
+    deliv = DeliveryForm(instance=delivery,prefix = 'dv', auto_id = '%s') 
+    # prefix est pour le champ name, auto_id dérive du nom ici dv-description    
+    # auto_id = 'dv-%s" ne marche que pour le champ id
     products = ProductsSet(Product) #là, il faut faire l'inital
     formset= [] # on devrait utiliser formset_factory, ou modelformset_factory avec initial, 
 # il y a queryset comme paramètre, à regarder quand même. la flemme
@@ -122,7 +124,7 @@ def _parse_form(request):
     dv.description = descr or None
     dv.save()
 
-    for r in range(int(d['n_rows'])):
+    for r in range(1,int(d['n_rows'])):
         fields = _get_pd_fields(d, 'r%d' % r)
         if fields.get('id', False):
             pd = Product.objects.get(pk=fields['id'])

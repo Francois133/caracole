@@ -43,19 +43,21 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product # recupère tous les champs
         exclude = ('delivery',) #par défaut un choix de delivery
-#        widgets = { 'description' : Textarea(attrs={'rows':'5'}),
-#                }
-        widgets = {
-               'description' : SummernoteWidget(attrs={'summernote' : {'width':'98%', 'height':'130px', 'airMode':False, 
-'toolbar' : ['bold','italic', ['fontname', ['fontname']],['fontsize', ['fontsize']],['color', ['color']],'picture','codeview'],
-        }}),
-        }
+        widgets = { 'description' : Textarea(attrs={'rows':'5'}),
+                }
+#        widgets = {
+#               'description' : SummernoteWidget(attrs={'summernote' : {'width':'98%', 'height':'130px', 'airMode':False, 
+#'toolbar' : ['bold','italic', ['fontname', ['fontname']],['fontsize', ['fontsize']],['color', ['color']],'picture','codeview'],
+#        }}),
+#        }
     # L'utilisation de Inplace et de {{form.media}} dans le template modifie la taille de delivery juste avant (?)
     # MAIS permet d'avoir un widget resized la taille au texte, aussi il n'y a pas de toolbar.
 
 ProductFormSet= modelformset_factory(Product,exclude=('delivery',),extra=3) 
 
 ProductsSet = formset_factory(ProductForm, extra=3) # On peut faire un set mais pas de modèle, on n'a pas de save
+# Pour aller chercher ProductsSet.empty_form
+
 
 class DeliveryForm(forms.ModelForm):
     """Le formulaire pour editer une livraison, template edit_delivery_products
@@ -71,11 +73,13 @@ class DeliveryForm(forms.ModelForm):
     class Meta:
         model = Delivery
         exclude = ('datedelivery','network')
-        widgets = { 
-            'description' : SummernoteWidget(attrs={   
-                   'summernote' : {'id' : 'dv-description','width':'100%', 'height':'300px', 'airMode':False, 'iframe':True },
-                    }),
-        }
+        widgets = { 'description' : Textarea(),
+                }
+#        widgets = { 
+#            'description' : SummernoteWidget(attrs={   
+#                   'summernote' : {'id' : 'dv-description','width':'100%', 'height':'300px', 'airMode':False, 'iframe':True },
+#                    }),
+#        }
         # l'autre syntaxe est fields pour spécifier les fields
 
 

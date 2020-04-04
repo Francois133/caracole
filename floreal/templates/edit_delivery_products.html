@@ -1,5 +1,4 @@
 {% extends 'layout_semi_wide.html' %}
-{% load static %}
 {% block head %}
   <script type='text/javascript'>
     // <![CDATA[
@@ -213,7 +212,7 @@
     $(document).ready(function() {
       /* Generate and fill product rows */
        /*
-      for(var i=0; i<PRODUCTS.length; i++) 
+      for(var i=0; i<PRODUCTS.length; i++) {
         var record = PRODUCTS[i];
         var r_prefix = add_row();
         fill_row(r_prefix, record); 
@@ -300,10 +299,10 @@
         <tbody>
     {% for prodform in prodformset %}
         {% include "product.html" with product=prodform prefix=prodform.prefix %}
-         <!-- Pour le Inplace -->
+         <!-- Pour le Inplace 
         {% if forloop.last %}
-            {{prodform.media}} <!-- only loaded once -->
-        {% endif %}
+            {{prodform.media}}
+        {% endif %} -->
     {% endfor %}
         </tbody>
     </table>
