@@ -73,7 +73,7 @@ class DeliveryForm(forms.ModelForm):
     class Meta:
         model = Delivery
         exclude = ('datedelivery','network')
-        widgets = { 'description' : Textarea(),
+        widgets = { 'description' : Textarea(attrs={'class':'summernote'}),
                 }
 #        widgets = { 
 #            'description' : SummernoteWidget(attrs={   

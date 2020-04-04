@@ -1,5 +1,12 @@
 {% extends 'layout_semi_wide.html' %}
-{% block head %}
+{% load static %}
+{% block head %} 
+    <script type="text/javascript" src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
+    <link href="{% static 'js/bootstrap.min.css' %}" rel="stylesheet">
+    <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+    <link href="{% static 'summernote/summernote.min.css' %}" rel="stylesheet">
+    <script type="text/javascript" src="{% static 'summernote/summernote.min.js' %}"></script>
+    
   <script type='text/javascript'>
     // <![CDATA[
 
@@ -48,6 +55,12 @@
       if( described) {
           $("#"+r_prefix+"-description").show();
           $("#"+r_prefix+"-description textarea").removeAttr("disabled");
+          let texta = document.getElementById("id_"+r_prefix+"-description");
+          //console.log("Found textarea", r_prefix);
+          if  (! (texta.hasAttribute("linked"))) {
+            $("#"+r_prefix+"-description textarea").summernote();
+            texta.setAttribute("linked", true);
+            }
       } else {
           $("#"+r_prefix+"-description").hide();
           $("#"+r_prefix+"-description textarea").attr("disabled", "disabled");
@@ -187,7 +200,7 @@
         //    reflect_description("r"+r_num);
        // wire buttons
         for(let i=1; i<nb_prod+1; i++) {
-            console.log("On wire le button ", "r"+i);
+            //console.log("On wire le button ", "r"+i);
             reflect_description("r"+i);
             $("#r"+i+" td.place button.up").click(function() { swap_rows(i-1); })
             $("#r"+i+" td.place button.down").click(function() { swap_rows(i); })
@@ -218,7 +231,7 @@
         fill_row(r_prefix, record); 
       }
         */
-       
+      $('#dv-description').summernote();
       N_ROWS=NB_PRODUCTS+1;
       /* Add a couple of empty rows. */
       add_blank_products();
@@ -239,21 +252,20 @@
   </script>
   <style type="text/css">
       td.name input { width: 200px; }
-      td.unit input { width: 40px; }
+      td.unit input { width: 50px; }
       td.unit-label { text-align: left; }
-      td.price input { width: 40px; text-align: right; }
-      td.quantity_per_package input { width: 40px; text-align: right; }
-      .quota, .quantity_per_package { padding-left: 20px; }
+      td.price input { width: 60px; text-align: right; }
+      td.quantity_per_package input { width: 45px; text-align: right; }
+      .quota, .quantity_per_package { padding-left: 10px; }
       td.quota input { width: 40px; }
-      td.quantum input { width: 40px; }
+      td.quantum input { width: 38px; }
       td.unit_weight input { width: 40px; text-align: right; }
       tr.deleted { text-decoration: line-through; }
       tr.deleted input { text-decoration: line-through; }
       tr.deleted textarea { text-decoration: line-through; }
-      #products-table th.non-rotate { vertical-align: bottom; }
+      #products-table th.non-rotate { vertical-align: bottom; text-align : center}
       #products-table textarea { width: 100%; }
-      #products-table2 th.non-rotate { vertical-align: bottom; }
-      #products-table2 textarea { width: 100%; }
+      #products-table input { padding: 1px;}  
       table .hidden { display: none; }
       td.place button { padding: 1px; }
       #dv-table th {text-align: right; }
@@ -282,7 +294,7 @@
     <table id="products-table">
         <thead>
             <tr>
-               <th class="hidden non-rotate"></th>
+                <th class="hidden non-rotate"></th>
                 <th class="non-rotate">#</th>
                 <th class="non-rotate">Produit</th>
                 <th class="non-rotate">Prix</th>
@@ -299,10 +311,6 @@
         <tbody>
     {% for prodform in prodformset %}
         {% include "product.html" with product=prodform prefix=prodform.prefix %}
-         <!-- Pour le Inplace 
-        {% if forloop.last %}
-            {{prodform.media}}
-        {% endif %} -->
     {% endfor %}
         </tbody>
     </table>
