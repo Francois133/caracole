@@ -1,5 +1,5 @@
 {% extends 'layout_semi_wide.html' %}
-
+{% load static %}
 {% block head %}
   <script type='text/javascript'>
     // <![CDATA[
@@ -182,6 +182,25 @@
       }
     }
 
+    /* For version 2.0 add_event, replacement for fill_row(), rows already filled */
+    function add_events(nb_prod) {
+        //for(var r_num=1; r_num<nb_prod+1; r_num++) {
+        //    reflect_description("r"+r_num);
+       // wire buttons
+        for(let i=1; i<nb_prod+1; i++) {
+            console.log("On wire le button ", "r"+i);
+            reflect_description("r"+i);
+            $("#r"+i+" td.place button.up").click(function() { swap_rows(i-1); })
+            $("#r"+i+" td.place button.down").click(function() { swap_rows(i); })
+            //wire checkboxes
+            $("#r"+i+" .described :checkbox").change(function() { reflect_description("r"+i); });
+            //mirroring inputs
+            $("#r"+i+" .unit input").keyup(function() { reflect_unit_change("r"+i); });
+            reflect_unit_change("r"+i);
+        }
+        
+    }
+
     function submit_if_valid() {
         if($("#dv-name").val().trim() == "") {
             alert("Avant de pouvoir sauvegarder, il faut donner un nom à la livraison, en haut du formulaire !");
@@ -194,16 +213,17 @@
     $(document).ready(function() {
       /* Generate and fill product rows */
        /*
-      for(var i=0; i<PRODUCTS.length; i++) {
+      for(var i=0; i<PRODUCTS.length; i++) 
         var record = PRODUCTS[i];
         var r_prefix = add_row();
         fill_row(r_prefix, record); 
       }
         */
-        N_ROWS=NB_PRODUCTS+1;
+       
+      N_ROWS=NB_PRODUCTS+1;
       /* Add a couple of empty rows. */
       add_blank_products();
-
+      add_events(NB_PRODUCTS);  
       /* Disable the "move up" button of the first product.
        * "move down" of the last button has been handled through blank line insertions. */
       $("#r1 td.place button.up").attr("disabled", "disabled");
@@ -246,34 +266,6 @@
 
 {% block content %}
 <form method="post" action="" id="form">
-<!--
-    <table id="dv-table">
-        <tr>
-          <th><label for="dv-name">Nom de la livraison :</label></th>
-          <td><input id="dv-name" maxlength="64" name="dv-name" type="text" value="{{delivery.name|escapejs}}" required /></td>
-        </tr>
-      <tr>
-        <th><label for="dv-state">État de la livraison :</label></th>
-        <td><select id="dv-state" name="dv-state">
-          {% for key, name in delivery.STATE_CHOICES.items %}
-          <option value="{{key}}" {% if delivery.state == key %}selected="selected"{% endif %}>{{name}}</option>
-          {% endfor %}
-        </select></td>
-      </tr>
-    </table>
-
-    <div style="height: 50px;"></div>
-
-    <h3>Description de la commande</h3>
-    <p>
-        <textarea name="dv-description" id="dv-description" rows="10">{{delivery.description|default_if_none:""}}</textarea>
-    <script type='text/javascript'>
-      //  $("#"+r_prefix+"-description").show();
-        //  { % markdown_editor "dv-description" %} ne marche pas, pas compris
-        // $("#dv-description").markItUp(mySettings, {"previewParserPath": "/markdown/preview/"});
-    </script>
-    </p>
--->
     <table >
     <tr>
           <th> {{deliv_form.name.label}} : </th>
@@ -288,7 +280,6 @@
    
     <h3>Description de la commande</h3>  
     {{deliv_form.description}} <!-- C'est un iframe ici -->
-    
     <table id="products-table">
         <thead>
             <tr>
@@ -309,11 +300,13 @@
         <tbody>
     {% for prodform in prodformset %}
         {% include "product.html" with product=prodform prefix=prodform.prefix %}
-        <!-- {{prodform.media}} -->
+         <!-- Pour le Inplace -->
+        {% if forloop.last %}
+            {{prodform.media}} <!-- only loaded once -->
+        {% endif %}
     {% endfor %}
         </tbody>
     </table>
-    
     <p>
         <button type='button' onclick="add_blank_products();">Ajouter des produits</button>
 

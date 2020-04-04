@@ -4,6 +4,7 @@
 from django import forms
 from .models import Delivery, Product
 from django_summernote.widgets import SummernoteWidget, SummernoteInplaceWidget
+# still has to make inplace work doesn't work
 from django.forms.widgets import Textarea
 from django.forms import modelformset_factory, formset_factory
 
@@ -16,25 +17,43 @@ class ProductForm(forms.ModelForm):
     ForeignKey par un ChoiceField, ce qu'on ne veut pas"""
     #def __init__(self,*args, **kwargs) :
     #    super().__init__(self,*args,**kwargs) 
-    #    self.auto_id=False
+    #    if self.instance.description != '' :
+    #        self.fields['described'].initial  = True
+        
+        
         
     described = forms.BooleanField(required=False) # Faut-il rajouter une description au produit ou effacer le champ description
     deleted = forms.BooleanField(required=False) # Faut-il effacer le produit après la requête, plutôt utiliser can_delete de django   
-
-
+    # if I am not mistaken will add a field in fields = {des..}
+    # TO DO normally in __init__ but __deconstruct__ is to be redefined as well ?   
+    def update_described(self):   
+        """set value and checked attribute according to description"""
+        checkboxwidgetattrs = self.fields['described'].widget.attrs # dictionnary of the widget attr
+        checkboxwidgetattrs['value'] = self.prefix+"-described"
+        if not (self.instance.description == '' or self.instance.description==None):
+            #print(product, " described", product.description) # value est une chaine de caractère           
+            checkboxwidgetattrs['checked']=True
+        else:
+            if 'checked' in checkboxwidgetattrs:
+                # print('Deleting checked'), normally unuseful
+                del checkboxwidgetattrs['checked']
+                # ne change rien au chargement du widget, on doit donc gérer sur la page
+                self.fields['description'].widget.attrs['disabled']=True
+    
     class Meta:
         model = Product # recupère tous les champs
         exclude = ('delivery',) #par défaut un choix de delivery
-        widgets = { 'description' : Textarea(attrs={'rows':'5'}),
-                }
-#       widgets = {
-#               'description' : SummernoteWidget(attrs={'summernote' : {'width':'98%', 'height':'130px', 'airMode':False, 'iframe':False ,
-#'toolbar' : ['bold','italic', ['fontname', ['fontname']],['fontsize', ['fontsize']],['color', ['color']],'picture','codeview'],
-#       }}),
-#       }
-    # we can do airMode on the edit_product because we have already the js from the delivery description ?
+#        widgets = { 'description' : Textarea(attrs={'rows':'5'}),
+#                }
+        widgets = {
+               'description' : SummernoteWidget(attrs={'summernote' : {'width':'98%', 'height':'130px', 'airMode':False, 
+'toolbar' : ['bold','italic', ['fontname', ['fontname']],['fontsize', ['fontsize']],['color', ['color']],'picture','codeview'],
+        }}),
+        }
+    # L'utilisation de Inplace et de {{form.media}} dans le template modifie la taille de delivery juste avant (?)
+    # MAIS permet d'avoir un widget resized la taille au texte, aussi il n'y a pas de toolbar.
 
-ProductFormSet= modelformset_factory(Product,exclude=('delivery',),extra=2) 
+ProductFormSet= modelformset_factory(Product,exclude=('delivery',),extra=3) 
 
 ProductsSet = formset_factory(ProductForm, extra=3) # On peut faire un set mais pas de modèle, on n'a pas de save
 
@@ -53,9 +72,8 @@ class DeliveryForm(forms.ModelForm):
         model = Delivery
         exclude = ('datedelivery','network')
         widgets = { 
-            'description' : SummernoteWidget(attrs={
-                   #'id' : 'dv-description',    
-                   'summernote' : {'width':'100%', 'height':'300px', 'airMode':False, 'iframe':True },
+            'description' : SummernoteWidget(attrs={   
+                   'summernote' : {'id' : 'dv-description','width':'100%', 'height':'300px', 'airMode':False, 'iframe':True },
                     }),
         }
         # l'autre syntaxe est fields pour spécifier les fields

@@ -57,7 +57,7 @@ INSTALLED_APPS = (
 )
 
 X_FRAME_OPTIONS = 'SAMEORIGIN' #added with summernote for clickjacking protection
-SUMMERNOTE_THEME = 'bs3' # can be bs4 or lite
+SUMMERNOTE_THEME = 'bs4' # can be bs4 or lite
 
 SUMMERNOTE_CONFIG = {
     'width' : '100%',

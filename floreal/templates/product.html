@@ -1,0 +1,41 @@
+<tr id="{{prefix}}">
+    <td class="hidden id"><input name="{{prefix}}-id" type="hidden" value="{{product.instance.id}}"/></td>
+    <td class="place">
+              <button type="button" class="up">▲</button> 
+               {{product.place.value}} 
+              <button class="down" type="button">▼</button>
+              <input name= "{{prefix}}-place" type="hidden" value="{{product.place.value}}"/>
+    </td>
+    <td class="name"> {{product.name}} </td> 
+    <td class = "price"> {{product.price}} </td> 
+    <td>€/</td>
+    <td class="unit"> {{product.unit}}  </td>
+    <td class="quantity_per_package"> {{product.quantity_per_package}} </td>
+    <td class="unit-label"> 
+        <span class="unit-mirror">pièce</span>
+        <span class="if-unit-mirror" style="display: inline;">/ct</span> 
+    </td>
+    <td class="quantum" > {{product.quantum}} </td>
+    <td class="unit-label"> 
+        <span class="unit-mirror">pièce</span>
+    </td>    
+    <td class="unit_weight"> {{product.unit_weight}} </td>
+    <td> kg </td>
+    <td class = "deleted">
+        <input name="{{prefix}}-deleted" value="{{prefix}}-deleted" onchange="reflect_deletion('{{prefix}}')" type="checkbox"
+    </td>
+    <td class="described">
+        <!--
+        <input name="{{prefix}}-described" value="{{prefix}}-described" onchange="reflect_description('{{prefix}}')" 
+        type="checkbox"> 
+        -->    
+        {{product.described}}
+    </td>
+</tr>
+    <tr id="{{prefix}}-description"> 
+        <td> </td>
+        <td colspan="{%if QUOTAS_ENABLED%}14{%else%}12{%endif%}"> 
+         {{product.description}} </td>
+ </tr>
+
+           

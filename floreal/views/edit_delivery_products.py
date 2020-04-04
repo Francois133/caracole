@@ -22,7 +22,7 @@ from ..penury import set_limit
 @nw_admin_required(lambda a: get_delivery(a['delivery']).network)
 def edit_delivery_products(request, delivery):
     """Edit a delivery (name, state, products). Network staff only."""
-
+#TO DO some error processing
     delivery = get_delivery(delivery)
 
     if request.user not in delivery.network.staff.all():
@@ -34,8 +34,7 @@ def edit_delivery_products(request, delivery):
         d=request.POST
         if 'SauvRet' in d:
             return redirect('edit_delivery', delivery.id)
-        else: # Only save
-            #delivery = get_delivery(delivery)
+        else: #reload the page
             return redirect('edit_delivery_products', delivery.id)
     else:  # Create and populate forms to render
         return prepare_and_render(request,delivery)
@@ -43,13 +42,17 @@ def edit_delivery_products(request, delivery):
 def prepare_and_render(request,delivery):
     deliv = DeliveryForm(instance=delivery,prefix = 'dv') # auto_id = 'dv-%s" ne marche que pour le champ id
     products = ProductsSet(Product) #là, il faut faire l'inital
-    formset= [] # une liste de formulaire
+    formset= [] # on devrait utiliser formset_factory, ou modelformset_factory avec initial, 
+# il y a queryset comme paramètre, à regarder quand même. la flemme
     for product in delivery.product_set.all() : # order place
-        my_product_form = ProductForm(instance = product, prefix='r'+str(product.place), auto_id=False) 
-            # auto_id à False pour l'id des inputs et des textareas ?
+        my_prefix = 'r'+str(product.place)
+        my_product_form = ProductForm(instance = product, prefix = my_prefix)
+        my_product_form.update_described() # widget update for showing or not description
+            # auto_id à False pour l'id des inputs et des textareas ? pour la textarea '%s-' soit r1-
 # y a de l'idée   
 # TO DO works because we order by place, this shall be the product id to save it, but the logics of the template
-# would have to also change, in auto_id '%s-' would mean id will be prefixed by r1-, prefix is for the names of the fields                
+# would have to also change, in auto_id '%s-' would mean id will be prefixed by r1-, 
+# prefix is for the names of the fields                
         formset.append(my_product_form)
     vars = {'QUOTAS_ENABLED': False,
                 'user': request.user,
@@ -109,7 +112,7 @@ def _pd_update(pd, fields):
 def _parse_form(request):
     """Parse a delivery edition form and update DB accordingly."""
     d = request.POST
-    #print(d)
+    print(d)
     dv = Delivery.objects.get(pk=int(d['dv-id']))
 
     # Edit delivery name and state
@@ -131,7 +134,7 @@ def _parse_form(request):
                     # they will be automatically deleted.
                     # No need to update penury management either, as there's
                     # no purchase of this product left to adjust.
-                else:  # Update product
+                else:  # Update product, shall update only if different
                     print("Updating product", pd)
                     _pd_update(pd, fields)
                     pd.save(force_update=True)
@@ -155,6 +158,7 @@ def _parse_form(request):
                                         quantity_limit=fields['quantity_limit'],
                                         unit=fields['unit'],
                                         unit_weight=fields['unit_weight'],
+                                        description=fields['description'],
                                         place = fields['place'],
                                         delivery=dv)
             pd.save()
