@@ -22,40 +22,53 @@ from ..penury import set_limit
 @nw_admin_required(lambda a: get_delivery(a['delivery']).network)
 def edit_delivery_products(request, delivery):
     """Edit a delivery (name, state, products). Network staff only."""
-#TO DO some error processing
+#TO DO some error processing, messaging the user
     delivery = get_delivery(delivery)
 
     if request.user not in delivery.network.staff.all():
         return HttpResponseForbidden('Réservé aux administrateurs du réseau '+delivery.network.name)
 
     if request.method == 'POST':  # Handle submitted data
-        _parse_form(request)
+        #_parse_form(request)
         JournalEntry.log(request.user, "Edited products for delivery %s/%s", delivery.network.name, delivery.name)
         d=request.POST
+        parse_and_save(d, delivery)
         if 'SauvRet' in d:
             return redirect('edit_delivery', delivery.id)
         else: #reload the page
             return redirect('edit_delivery_products', delivery.id)
     else:  # Create and populate forms to render
         return prepare_and_render(request,delivery)
-
+        
+        
 def prepare_and_render(request,delivery):
     deliv = DeliveryForm(instance=delivery,prefix = 'dv', auto_id = '%s') 
     # prefix est pour le champ name, auto_id dérive du nom ici dv-description    
     # auto_id = 'dv-%s" ne marche que pour le champ id
-    products = ProductsSet(Product) #là, il faut faire l'inital
     formset= [] # on devrait utiliser formset_factory, ou modelformset_factory avec initial, 
 # il y a queryset comme paramètre, à regarder quand même. la flemme
-    for product in delivery.product_set.all() : # order place
-        my_prefix = 'r'+str(product.place)
+    for ind, product in enumerate(delivery.product_set.all(), start=1) : # order place
+        my_prefix = 'r'+str(ind)
+        #rearrange places
+        if product.place != ind :
+            product.place = ind
+            product.save()
         my_product_form = ProductForm(instance = product, prefix = my_prefix)
         my_product_form.update_described() # widget update for showing or not description
+        formset.append(my_product_form)
+    siz=len(formset) # Add 3 blank lines
+    for i in range(siz+1,siz+4):
+        my_product = Product(place=i)
+        prodform = ProductForm(instance = my_product, prefix ='r'+str(i))
+        prodform.fields['name'].required = False
+        prodform.fields['price'].required = False
+        formset.append(prodform)
             # auto_id à False pour l'id des inputs et des textareas ? pour la textarea '%s-' soit r1-
 # y a de l'idée   
 # TO DO works because we order by place, this shall be the product id to save it, but the logics of the template
 # would have to also change, in auto_id '%s-' would mean id will be prefixed by r1-, 
 # prefix is for the names of the fields                
-        formset.append(my_product_form)
+        
     vars = {'QUOTAS_ENABLED': False,
                 'user': request.user,
                 'delivery': delivery,
@@ -66,104 +79,86 @@ def prepare_and_render(request,delivery):
     return render(request,'edit_delivery_products.html', vars)
 
 
-def _get_pd_fields(d, r_prefix):
-    """Retrieve form fields representing a product."""
-    fields = ['id', 'name', 'price', 'quantity_per_package', 'unit', 'quantity_limit', 'quantum', 'unit_weight',
-              'place', 'described', 'description']
-    raw = {f: d.get("%s-%s" % (r_prefix, f), None) for f in fields}
-    id = raw['id']
-    id = int(id) if id and id.isdigit() else None
-    if not raw['name']:
-        return {'id': id, 'deleted': True}  # All fields empty means deleted
-    qpp = raw['quantity_per_package']
-    quota = raw['quantity_limit']
-    quantum = raw['quantum']
-    weight = raw['unit_weight']
-    try :
-        price = float(raw['price'])
-    except ValueError : #price string empty, shall message the user, temp solution 
-        return {'id': id, 'deleted': True}
-    if not weight:  # 0 or None
-        weight = 1 if raw['unit'] == 'kg' else 0
-    return {'id': id,
-            'name': raw['name'],
-            'place': int(raw['place']),
-            'price': price,
-            'quantity_per_package': int(qpp) if qpp else None,
-            'unit': raw['unit'] or 'pièce',
-            'quantity_limit': int(quota) if quota else None,
-            'quantum': float(quantum) if quantum else None,
-            'unit_weight': float(weight) if weight is not None else None,
-            'description': raw['description'] if raw['described'] else None,
-            'deleted': "%s-deleted" % (r_prefix) in d}
+def parse_and_save(request_post,deliv):
+    """Rebuild forms, validate them to transform strings fields into model fields, save data
+    the data parameter of a forms is made for that and is thought as a string dictionnary 
+    for this reverse transformation : 
+    it is stated NOWHERE IN THE MOTHER OF FNUCNING GOD DOCUMENTATION 
+    use ProductForm(data, instance=product), product.initial is then what we need...
+    """
+    data_del = get_delivery_from_data(request_post,'dv')
+    deliv_form = DeliveryForm(data_del,instance=deliv) 
+    # ET qu'est-ce qu'on obtient, un $&!# de formulaire lié !!! (si)
+    if deliv_form.is_valid() : #populate cleaned_data as fields linked with model (!) 
+        if not (deliv_form.has_changed()):
+            print("Le formulaire n'a pas changé, et moi non plus d'ailleurs")
+        else :
+            print("Nous sauvons ", deliv)
+            deliv_form.save()
+    n_rows = int(request_post['n_rows'])
 
+    for i in range(1,n_rows):
+        pref = 'r'+str(i)
+        data_prod = get_product_from_data(request_post,pref)
+        try : 
+            if  not (data_prod['id'] == 'None' or data_prod['id'] == ''): #None for blank products
+                product = Product.objects.get(pk=int(data_prod['id']))
+                if 'deleted' in data_prod :
+                    product.delete()
+                else : 
+                    prod_form = ProductForm(data_prod, instance= product)
+                    if prod_form.is_valid():
+                        if prod_form.has_changed():
+                            print("Updating produit ", pref, prod_form.changed_data)
+                            prod_form.save()
+            else : # blank product
+                if 'deleted' not in data_prod :
+                    if data_prod['name'] != '' and data_prod['price'] != '':
+                        prod_form= ProductForm(data_prod)
+                        if prod_form.is_valid():
+                            data = prod_form.cleaned_data
+                            del data['described']
+                            del data['deleted']
+                            data['delivery']=deliv
+                            if data['unit'] == None:
+                                data['unit'] = 'kg'
+                                data['unit_weight'] = 1
+                            if data['quantum'] == None :
+                                data['quantum'] = 1
+                            prodi = Product.objects.create(**data)
+                            prodi.save() #for automatic id
+                            #print(prodi, " créé")
+               
+        except Exception as exc:
+            print("Form Validation error ", exc, pref )
+            print(data)
+    
 
-def _pd_update(pd, fields):
-    """Update a model object according to form fields."""
-    pd.name = fields['name']
-    pd.place = fields['place']
-    pd.price = fields['price']
-    pd.quantity_per_package = fields['quantity_per_package']
-    pd.unit = fields['unit']
-    pd.quantity_limit = fields['quantity_limit']
-    pd.unit_weight = fields['unit_weight']
-    pd.quantum = fields['quantum']
-    pd.description = fields['description']
+def get_delivery_from_data(req,prefix):
+    """req is a QueryDict, prefix is dv-, called with prefix='dv'"""
+    data = {}
+    fields=['name','state','description']
+    for champ in fields:
+        data[champ]=req.get(prefix+'-'+champ)
+    return data
 
+def get_product_from_data(req, prefix):
+    """ get data for fields with an id
+    req is a QueryDict, prefix is rx-, called with prefix='rx'
+    return {'id' : id, 'deleted' : True } if rx-deleted is found """
+    data = {}
+    fields = ['name', 'price', 'quantity_per_package', 'unit', 'quantity_limit', 'quantum', 'unit_weight',
+              'place', 'description']
+    pref = prefix + '-' 
+    ident = req.get(prefix+'-'+'id','') 
+    data['id'] = ident   
+    if prefix+'-'+'deleted' in req :
+        data['deleted']= True
+    else :
+        for champ in fields:
+            data[champ]=req.get(prefix+'-'+champ) 
+    return data
 
-def _parse_form(request):
-    """Parse a delivery edition form and update DB accordingly."""
-    d = request.POST
-    print(d)
-    dv = Delivery.objects.get(pk=int(d['dv-id']))
-
-    # Edit delivery name and state
-    dv.name = d['dv-name']
-    dv.state = d['dv-state']
-    descr = d['dv-description'].strip()
-    dv.description = descr or None
-    dv.save()
-
-    for r in range(1,int(d['n_rows'])):
-        fields = _get_pd_fields(d, 'r%d' % r)
-        if fields.get('id', False):
-            pd = Product.objects.get(pk=fields['id'])
-            if pd.delivery == dv:
-                if fields['deleted']:  # Delete previously existing product
-                    print("Deleting product",  pd)
-                    pd.delete()
-                    # Since purchases have foreign keys to purchased products,
-                    # they will be automatically deleted.
-                    # No need to update penury management either, as there's
-                    # no purchase of this product left to adjust.
-                else:  # Update product, shall update only if different
-                    print("Updating product", pd)
-                    _pd_update(pd, fields)
-                    pd.save(force_update=True)
-            else:  # From another delivery
-                if fields['deleted']:  # Don't import product
-                    print("Ignoring past product", pd)
-                    pass
-                else:  # Import product copy from other delivery
-                    print("Importing past product",  pd)
-                    _pd_update(pd, fields)
-                    pd.delivery = dv
-                    pd.id = None
-                    pd.save(force_insert=True)
-        elif fields['deleted']:
-                print("New product in r%d deleted/empty: ignoring" % r)
-        else:  # Parse products created from blank lines
-            print("Adding new product from line #%d" % r)
-            pd = Product.objects.create(name=fields['name'],
-                                        price=fields['price'],
-                                        quantity_per_package=fields['quantity_per_package'],
-                                        quantity_limit=fields['quantity_limit'],
-                                        unit=fields['unit'],
-                                        unit_weight=fields['unit_weight'],
-                                        description=fields['description'],
-                                        place = fields['place'],
-                                        delivery=dv)
-            pd.save()
 
     # In case of change in quantity limitations, adjust granted quantities for purchases
     #for pd in dv.product_set.all():

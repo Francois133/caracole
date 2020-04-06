@@ -9,7 +9,7 @@
     
   <script type='text/javascript'>
     // <![CDATA[
-
+  
     var N_ROWS = 1;
 
     var DELIVERY = {{delivery.id}};
@@ -206,9 +206,12 @@
             $("#r"+i+" td.place button.down").click(function() { swap_rows(i); })
             //wire checkboxes
             $("#r"+i+" .described :checkbox").change(function() { reflect_description("r"+i); });
+            $("#r"+i+" .deleted :checkbox").change(function() { reflect_deletion("r"+i); });
             //mirroring inputs
-            $("#r"+i+" .unit input").keyup(function() { reflect_unit_change("r"+i); });
+            jQuery.noConflict(); //key up conflicting with summernote
+            $("#r"+i+" .unit input").keyup(function(event) { event.stopPropagation(); reflect_unit_change("r"+i);  });
             reflect_unit_change("r"+i);
+            
         }
         
     }
@@ -232,10 +235,12 @@
       }
         */
       $('#dv-description').summernote();
-      N_ROWS=NB_PRODUCTS+1;
+      
       /* Add a couple of empty rows. */
-      add_blank_products();
-      add_events(NB_PRODUCTS);  
+      //add_blank_products();
+      add_events(NB_PRODUCTS+3);
+      N_ROWS=NB_PRODUCTS+4; 
+       $("#n_rows").attr("value", N_ROWS);
       /* Disable the "move up" button of the first product.
        * "move down" of the last button has been handled through blank line insertions. */
       $("#r1 td.place button.up").attr("disabled", "disabled");
