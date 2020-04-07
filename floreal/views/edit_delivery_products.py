@@ -29,9 +29,9 @@ def edit_delivery_products(request, delivery):
         return HttpResponseForbidden('Réservé aux administrateurs du réseau '+delivery.network.name)
 
     if request.method == 'POST':  # Handle submitted data
-        #_parse_form(request)
         JournalEntry.log(request.user, "Edited products for delivery %s/%s", delivery.network.name, delivery.name)
         d=request.POST
+        print(d)
         parse_and_save(d, delivery)
         if 'SauvRet' in d:
             return redirect('edit_delivery', delivery.id)
@@ -90,10 +90,8 @@ def parse_and_save(request_post,deliv):
     deliv_form = DeliveryForm(data_del,instance=deliv) 
     # ET qu'est-ce qu'on obtient, un $&!# de formulaire lié !!! (si)
     if deliv_form.is_valid() : #populate cleaned_data as fields linked with model (!) 
-        if not (deliv_form.has_changed()):
-            print("Le formulaire n'a pas changé, et moi non plus d'ailleurs")
-        else :
-            print("Nous sauvons ", deliv)
+        if  (deliv_form.has_changed()):
+            print("Description saved ", deliv)
             deliv_form.save()
     n_rows = int(request_post['n_rows'])
 
@@ -121,8 +119,8 @@ def parse_and_save(request_post,deliv):
                             del data['deleted']
                             data['delivery']=deliv
                             if data['unit'] == None:
-                                data['unit'] = 'kg'
-                                data['unit_weight'] = 1
+                                data['unit'] = 'pièce'
+                                data['unit_weight'] = 0
                             if data['quantum'] == None :
                                 data['quantum'] = 1
                             prodi = Product.objects.create(**data)
@@ -148,7 +146,7 @@ def get_product_from_data(req, prefix):
     return {'id' : id, 'deleted' : True } if rx-deleted is found """
     data = {}
     fields = ['name', 'price', 'quantity_per_package', 'unit', 'quantity_limit', 'quantum', 'unit_weight',
-              'place', 'description']
+              'place', 'description', 'described']
     pref = prefix + '-' 
     ident = req.get(prefix+'-'+'id','') 
     data['id'] = ident   
@@ -157,6 +155,9 @@ def get_product_from_data(req, prefix):
     else :
         for champ in fields:
             data[champ]=req.get(prefix+'-'+champ) 
+        if data['described']==None : #described hidden not transmitted
+            data['description'] = ''
+        del data['described']
     return data
 
 

@@ -43,7 +43,7 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product # recupère tous les champs
         exclude = ('delivery',) #par défaut un choix de delivery
-        widgets = { 'description' : Textarea(attrs={'rows':'5'}),
+        widgets = { 'description' : Textarea(attrs={'rows':'5', 'class':'summernote'}),
                 }
 #        widgets = {
 #               'description' : SummernoteWidget(attrs={'summernote' : {'width':'98%', 'height':'130px', 'airMode':False, 

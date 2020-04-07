@@ -9,7 +9,6 @@
     
   <script type='text/javascript'>
     // <![CDATA[
-  
     var N_ROWS = 1;
 
     var DELIVERY = {{delivery.id}};
@@ -56,11 +55,13 @@
           $("#"+r_prefix+"-description").show();
           $("#"+r_prefix+"-description textarea").removeAttr("disabled");
           let texta = document.getElementById("id_"+r_prefix+"-description");
-          //console.log("Found textarea", r_prefix);
-          if  (! (texta.hasAttribute("linked"))) {
+          console.log("Found textarea", r_prefix);
+          //link summernote only first time it is shown
+          if  (! (texta.hasAttribute("linked"))) { 
             $("#"+r_prefix+"-description textarea").summernote();
             texta.setAttribute("linked", true);
             }
+           
       } else {
           $("#"+r_prefix+"-description").hide();
           $("#"+r_prefix+"-description textarea").attr("disabled", "disabled");
@@ -68,7 +69,7 @@
     }
 
     function reflect_unit_change(r_prefix) {
-        var content = $("#"+r_prefix+" .unit input").attr('value');
+        var content = $("#"+r_prefix+" .unit input").val();
         if(RegExp("^\\d.*").test(content)) { content = "×"+content; }
         $("#"+r_prefix+" .unit-mirror").text(content);
         $("#"+r_prefix+" .if-unit-mirror")[content ? 'show' : 'hide']();
@@ -100,14 +101,29 @@
         var t1 = $("#r"+r1+"-description textarea").val();
         $("#r"+r0+"-description textarea").val(t1);
         $("#r"+r1+"-description textarea").val(t0);
-
+        
+        //link summernote if needed
+        reflect_description("r"+r0);
+        reflect_description("r"+r1);
+        
+        // same for summernote, except there might not be summernote
+        let text0 = document.getElementById("id_r"+r0+"-description");
+        let text1 = document.getElementById("id_r"+r1+"-description");
+        if ((text0.hasAttribute("linked")) && (text1.hasAttribute("linked"))) {
+        var str0 = $('.summernote').eq(r0).summernote('code');
+        var str1 = $('.summernote').eq(r1).summernote('code');
+        //all textarea have class summernote
+        $('.summernote').eq(r0).summernote('code',str1); 
+        $('.summernote').eq(r1).summernote('code',str0);
+       }
 
         reflect_deletion("r"+r0);
-        reflect_description("r"+r0);
+       
         reflect_unit_change("r"+r0);
         reflect_deletion("r"+r1);
-        reflect_description("r"+r1);
+        
         reflect_unit_change("r"+r1);
+       
     }
 
     /* Add rows of blank products at the end of the table */
@@ -143,7 +159,7 @@
         <tr id="r%-description">\n\
           <td></td>\n\
           <td colspan="{%if QUOTAS_ENABLED%}14{%else%}12{%endif%}">\n\
-            <textarea name="r%-description" rows="5"></textarea>\n\
+            <textarea id= "id_r%-description" class="summernote" name="r%-description" rows="5"></textarea>\n\
           </td>\n\
         </tr>'.replace(/%/g, r_num));
 
@@ -208,8 +224,7 @@
             $("#r"+i+" .described :checkbox").change(function() { reflect_description("r"+i); });
             $("#r"+i+" .deleted :checkbox").change(function() { reflect_deletion("r"+i); });
             //mirroring inputs
-            jQuery.noConflict(); //key up conflicting with summernote
-            $("#r"+i+" .unit input").keyup(function(event) { event.stopPropagation(); reflect_unit_change("r"+i);  });
+            $("#r"+i+" .unit input").keyup(function(event) {  reflect_unit_change("r"+i);  });
             reflect_unit_change("r"+i);
             
         }
@@ -234,8 +249,8 @@
         fill_row(r_prefix, record); 
       }
         */
-      $('#dv-description').summernote();
       
+      $("#dv-description").summernote();
       /* Add a couple of empty rows. */
       //add_blank_products();
       add_events(NB_PRODUCTS+3);
@@ -247,6 +262,7 @@
 
       /* If the delivery has just been created, clear up the name so that it has to be filled
        * explicitly. */
+     
       var url_params = new URLSearchParams(window.location.search);
       if(url_params.get('new')) {
           $("#dv-name").val("");
@@ -269,6 +285,7 @@
       tr.deleted input { text-decoration: line-through; }
       tr.deleted textarea { text-decoration: line-through; }
       #products-table th.non-rotate { vertical-align: bottom; text-align : center}
+      #products-table th { padding-bottom : 5px} /* else the checkboxes are not checkable */
       #products-table textarea { width: 100%; }
       #products-table input { padding: 1px;}  
       table .hidden { display: none; }
@@ -295,7 +312,7 @@
     <div style="height: 50px;"></div>
    
     <h3>Description de la commande</h3>  
-    {{deliv_form.description}} <!-- C'est un iframe ici -->
+    {{deliv_form.description}} 
     <table id="products-table">
         <thead>
             <tr>
