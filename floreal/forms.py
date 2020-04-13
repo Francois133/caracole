@@ -3,7 +3,7 @@
 
 from django import forms
 from .models import Delivery, Product
-from django_summernote.widgets import SummernoteWidget, SummernoteInplaceWidget
+#from django_summernote.widgets import SummernoteWidget, SummernoteInplaceWidget
 # still has to make inplace work doesn't work
 from django.forms.widgets import Textarea
 from django.forms import modelformset_factory, formset_factory

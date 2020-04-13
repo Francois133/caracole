@@ -91,7 +91,7 @@ def parse_and_save(request_post,deliv):
     # ET qu'est-ce qu'on obtient, un $&!# de formulaire lié !!! (si)
     if deliv_form.is_valid() : #populate cleaned_data as fields linked with model (!) 
         if  (deliv_form.has_changed()):
-            print("Description saved ", deliv)
+            print("Description saved", deliv)
             deliv_form.save()
     n_rows = int(request_post['n_rows'])
 

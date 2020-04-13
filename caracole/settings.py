@@ -53,16 +53,9 @@ INSTALLED_APPS = (
     'django_extensions',
      #'django_markdown', # WARNING that's django-markdown-app, not django-markdown !
      #'tinymce'
-    'django_summernote',
+    #'django_summernote',
 )
 
-X_FRAME_OPTIONS = 'SAMEORIGIN' #added with summernote for clickjacking protection
-SUMMERNOTE_THEME = 'bs4' # can be bs4 or lite
-
-SUMMERNOTE_CONFIG = {
-    'width' : '100%',
-    'lang': 'fr-FR',
-    }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
